@@ -1,0 +1,7 @@
+{
+  "v": 1,
+  "codecs": ["msgpack", "json"],
+  "project_id": "demo-project",
+  "token": "demo-token",
+  "session_id": "s-0123456789abcdef"
+}

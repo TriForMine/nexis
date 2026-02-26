@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "t": "state.patch",
+  "room": "counter_room:default",
+  "p": {
+    "seq": 65,
+    "checksum": "63e4103e1381ae06b374a2e72002728b71304ecc9fd66354e43fc9452eb0eabf",
+    "ops": [{ "op": "set", "path": "/counter", "value": 65 }]
+  }
+}

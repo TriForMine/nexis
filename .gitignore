@@ -1,0 +1,42 @@
+# Rust
+server/target/
+examples/wasm-plugins/**/target/
+**/target/
+**/*.rs.bk
+*.pdb
+
+# JS/TS/Bun
+**/node_modules/
+**/.bun/
+**/dist/
+**/.turbo/
+**/.vite/
+**/.cache/
+**/coverage/
+**/.nyc_output/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env / local config
+.env
+.env.*
+!.env.example
+
+# Test/load artifacts
+infra/load/results/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

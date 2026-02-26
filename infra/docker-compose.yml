@@ -1,0 +1,125 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nexis
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nexis"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  control-api:
+    build:
+      context: ..
+      dockerfile: dashboard/control-api/Dockerfile
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/nexis
+      NEXIS_MASTER_SECRET: nexis-dev-master-secret
+      NEXIS_INTERNAL_TOKEN: nexis-dev-internal-token
+      NEXIS_DEMO_PROJECT_ID: demo-project
+      NEXIS_DEMO_KEY_ID: demo-key
+      NEXIS_DEMO_PROJECT_SECRET: demo-secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:3000/health'); if(!r.ok) process.exit(1);",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "3000:3000"
+
+  dashboard-ui:
+    build:
+      context: ..
+      dockerfile: dashboard/ui/Dockerfile
+    environment:
+      PORT: 5173
+      CONTROL_API_URL: http://control-api:3000
+    depends_on:
+      control-api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:5173/'); if(!r.ok) process.exit(1);",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5173:5173"
+
+  rust-server:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    environment:
+      NEXIS_BIND: 0.0.0.0:4000
+      NEXIS_MASTER_SECRET: nexis-dev-master-secret
+      NEXIS_CONTROL_API_URL: http://control-api:3000
+      NEXIS_INTERNAL_TOKEN: nexis-dev-internal-token
+      NEXIS_AUTH_MODE: ${NEXIS_AUTH_MODE:-required}
+      NEXIS_SESSION_TTL_SECONDS: ${NEXIS_SESSION_TTL_SECONDS:-30}
+      NEXIS_ROOM_TICK_MS: 100
+      NEXIS_STATE_SNAPSHOT_EVERY_PATCHES: 20
+      NEXIS_STATE_PATCH_CHECKSUM_EVERY_PATCHES: 10
+      NEXIS_METRICS_BIND: 0.0.0.0:9100
+      NEXIS_DEMO_PROJECT_ID: demo-project
+      NEXIS_DEMO_PROJECT_SECRET: demo-secret
+      NEXIS_ROOM_TYPE_PLUGINS: ${NEXIS_ROOM_TYPE_PLUGINS:-}
+      NEXIS_WASM_ROOM_PLUGINS: '{"counter_plugin_room":"/app/plugins/nexis_counter_plugin.wasm"}'
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 4000"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "4000:4000"
+      - "9100:9100"
+
+  web-demo:
+    build:
+      context: ..
+      dockerfile: examples/web-demo/Dockerfile
+    environment:
+      PORT: 8080
+    depends_on:
+      rust-server:
+        condition: service_healthy
+      control-api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8080/'); if(!r.ok) process.exit(1);",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:

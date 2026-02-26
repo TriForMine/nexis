@@ -1,0 +1,17 @@
+[package]
+name = "nexis_core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+protocol = { path = "../protocol" }
+codec = { path = "../codec" }
+auth = { path = "../auth" }
+rooms = { path = "../rooms" }
+rpc = { path = "../rpc" }
+state_sync = { path = "../state_sync" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono.workspace = true

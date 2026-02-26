@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "t": "state.snapshot",
+  "room": "counter_room:default",
+  "p": {
+    "seq": 66,
+    "checksum": "a6f31587a5e0f4f7d67f63d0f8c4df4e4df8a52be29e2f9f87a6d6f58f6f4ca0",
+    "state": { "counter": 66 }
+  }
+}

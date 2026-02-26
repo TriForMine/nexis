@@ -1,0 +1,13 @@
+[package]
+name = "nexis_counter_plugin"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["TriForMine <quentin@triformine.dev>"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+nexis_wasm_plugin = { path = "../../../plugins/rust/nexis_wasm_plugin" }
+serde_json = "1"

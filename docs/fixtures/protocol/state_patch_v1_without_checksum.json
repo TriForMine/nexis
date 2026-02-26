@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "t": "state.patch",
+  "room": "counter_room:default",
+  "p": {
+    "seq": 66,
+    "ops": [{ "op": "set", "path": "/counter", "value": 66 }]
+  }
+}

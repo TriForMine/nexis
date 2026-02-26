@@ -1,0 +1,12 @@
+[package]
+name = "transport_ws"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+runtime = { path = "../runtime" }
+tokio.workspace = true
+tokio-tungstenite.workspace = true
+futures-util.workspace = true
+async-trait = "0.1"

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Nexis Dashboard</title>
+        <style>
+            :root {
+                --bg: #f6f5ef;
+                --panel: #ffffff;
+                --ink: #111111;
+                --muted: #5f5b53;
+                --accent: #0f766e;
+                --line: #ddd8cd;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+                color: var(--ink);
+                background: radial-gradient(
+                    circle at top,
+                    #fffdf7 0%,
+                    var(--bg) 65%
+                );
+            }
+            main {
+                max-width: 980px;
+                margin: 0 auto;
+                padding: 24px;
+            }
+            h1 {
+                margin: 0 0 8px;
+                font-size: 30px;
+            }
+            p {
+                color: var(--muted);
+                margin-top: 0;
+            }
+            .grid {
+                display: grid;
+                gap: 16px;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+            .card {
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 16px;
+            }
+            label {
+                display: block;
+                font-size: 12px;
+                margin-bottom: 6px;
+                color: var(--muted);
+            }
+            input,
+            select,
+            button {
+                width: 100%;
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid var(--line);
+                font: inherit;
+            }
+            button {
+                background: var(--accent);
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            pre {
+                background: #0d1117;
+                color: #d5f4e6;
+                border-radius: 8px;
+                padding: 12px;
+                overflow: auto;
+                min-height: 160px;
+            }
+            .row {
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>Nexis Control Plane</h1>
+            <p>
+                Minimal hosted-ready dashboard for projects, keys, and client
+                tokens.
+            </p>
+
+            <div class="grid">
+                <section class="card">
+                    <h2>Create Project</h2>
+                    <div class="row">
+                        <label for="projectName">Project Name</label>
+                        <input id="projectName" placeholder="my-game" />
+                    </div>
+                    <button id="createProject">Create Project</button>
+                </section>
+
+                <section class="card">
+                    <h2>Create API Key</h2>
+                    <div class="row">
+                        <label for="projectSelect">Project</label>
+                        <select id="projectSelect"></select>
+                    </div>
+                    <div class="row">
+                        <label for="keyName">Key Name</label>
+                        <input id="keyName" value="default" />
+                    </div>
+                    <button id="createKey">Create Key</button>
+                </section>
+
+                <section class="card">
+                    <h2>Mint Token</h2>
+                    <div class="row">
+                        <label for="tokenProject">Project</label>
+                        <select id="tokenProject"></select>
+                    </div>
+                    <div class="row">
+                        <label for="keyId">Key ID</label>
+                        <input id="keyId" placeholder="paste key id" />
+                    </div>
+                    <button id="mintToken">Mint Token</button>
+                    <button id="rotateKey" style="margin-top: 8px">
+                        Rotate Key
+                    </button>
+                    <button id="revokeKey" style="margin-top: 8px">
+                        Revoke Key
+                    </button>
+                </section>
+
+                <section class="card">
+                    <h2>Observability</h2>
+                    <button id="refreshMetrics">Refresh Metrics</button>
+                    <pre id="metrics" style="margin-top: 10px"></pre>
+                </section>
+            </div>
+
+            <section class="card" style="margin-top: 16px">
+                <h2>Output</h2>
+                <pre id="output"></pre>
+            </section>
+        </main>
+
+        <script>
+            const API_BASE = "/api";
+
+            const output = document.getElementById("output");
+            const metrics = document.getElementById("metrics");
+            const projectSelect = document.getElementById("projectSelect");
+            const tokenProject = document.getElementById("tokenProject");
+
+            function setOutput(value) {
+                output.textContent = JSON.stringify(value, null, 2);
+            }
+
+            function setMetrics(value) {
+                metrics.textContent = JSON.stringify(value, null, 2);
+            }
+
+            async function fetchProjects() {
+                const response = await fetch(`${API_BASE}/projects`);
+                const projects = await response.json();
+
+                for (const select of [projectSelect, tokenProject]) {
+                    select.innerHTML = "";
+                    for (const project of projects) {
+                        const option = document.createElement("option");
+                        option.value = project.id;
+                        option.textContent = `${project.name} (${project.id.slice(0, 8)})`;
+                        select.appendChild(option);
+                    }
+                }
+
+                return projects;
+            }
+
+            async function fetchMetrics() {
+                const response = await fetch(`${API_BASE}/metrics`);
+                const data = await response.json();
+                setMetrics(data);
+                return data;
+            }
+
+            document
+                .getElementById("createProject")
+                .addEventListener("click", async () => {
+                    const name = document
+                        .getElementById("projectName")
+                        .value.trim();
+                    if (!name) {
+                        setOutput({ error: "project name is required" });
+                        return;
+                    }
+
+                    const response = await fetch(`${API_BASE}/projects`, {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({ name }),
+                    });
+                    const data = await response.json();
+                    await fetchProjects();
+                    setOutput(data);
+                    await fetchMetrics();
+                });
+
+            document
+                .getElementById("createKey")
+                .addEventListener("click", async () => {
+                    const projectId = projectSelect.value;
+                    const keyName =
+                        document.getElementById("keyName").value.trim() ||
+                        "default";
+
+                    const response = await fetch(
+                        `${API_BASE}/projects/${projectId}/keys`,
+                        {
+                            method: "POST",
+                            headers: { "content-type": "application/json" },
+                            body: JSON.stringify({ name: keyName }),
+                        },
+                    );
+
+                    const data = await response.json();
+                    document.getElementById("keyId").value = data.id || "";
+                    setOutput(data);
+                    await fetchMetrics();
+                });
+
+            document
+                .getElementById("mintToken")
+                .addEventListener("click", async () => {
+                    const projectId = tokenProject.value;
+                    const keyId = document.getElementById("keyId").value.trim();
+
+                    const response = await fetch(`${API_BASE}/tokens`, {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({
+                            project_id: projectId,
+                            key_id: keyId,
+                            ttl_seconds: 3600,
+                        }),
+                    });
+
+                    setOutput(await response.json());
+                    await fetchMetrics();
+                });
+
+            document
+                .getElementById("rotateKey")
+                .addEventListener("click", async () => {
+                    const projectId = tokenProject.value;
+                    const keyId = document.getElementById("keyId").value.trim();
+                    if (!projectId || !keyId) {
+                        setOutput({
+                            error: "project and key id are required for rotation",
+                        });
+                        return;
+                    }
+
+                    const response = await fetch(
+                        `${API_BASE}/projects/${projectId}/keys/${keyId}/rotate`,
+                        {
+                            method: "POST",
+                        },
+                    );
+                    const data = await response.json();
+                    if (data && data.id) {
+                        document.getElementById("keyId").value = data.id;
+                    }
+                    setOutput(data);
+                    await fetchMetrics();
+                });
+
+            document
+                .getElementById("revokeKey")
+                .addEventListener("click", async () => {
+                    const projectId = tokenProject.value;
+                    const keyId = document.getElementById("keyId").value.trim();
+                    if (!projectId || !keyId) {
+                        setOutput({
+                            error: "project and key id are required for revoke",
+                        });
+                        return;
+                    }
+
+                    const response = await fetch(
+                        `${API_BASE}/projects/${projectId}/keys/${keyId}/revoke`,
+                        {
+                            method: "POST",
+                        },
+                    );
+                    setOutput(await response.json());
+                    await fetchMetrics();
+                });
+
+            document
+                .getElementById("refreshMetrics")
+                .addEventListener("click", () =>
+                    fetchMetrics().catch((error) =>
+                        setMetrics({ error: String(error) }),
+                    ),
+                );
+
+            Promise.all([fetchProjects(), fetchMetrics()]).catch((error) =>
+                setOutput({ error: String(error) }),
+            );
+        </script>
+    </body>
+</html>

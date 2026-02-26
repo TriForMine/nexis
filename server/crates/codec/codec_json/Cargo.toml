@@ -1,0 +1,10 @@
+[package]
+name = "codec_json"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+codec = { path = ".." }
+protocol = { path = "../../protocol" }
+serde_json.workspace = true

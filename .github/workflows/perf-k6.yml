@@ -1,0 +1,110 @@
+name: perf-k6
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  k6-compare:
+    runs-on: ubuntu-latest
+    env:
+      VUS: "50"
+      DURATION: "20s"
+      ROOM_SHARDS: "10"
+      INC_INTERVAL_MS: "250"
+      NEXIS_AUTH_MODE: "optional"
+      NEXIS_SESSION_TTL_SECONDS: "5"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+
+      - uses: grafana/setup-k6-action@v1
+
+      - name: Run baseline on PR base commit
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p infra/load/results
+          git checkout "${{ github.event.pull_request.base.sha }}"
+          docker compose -f infra/docker-compose.yml up -d --build --wait
+          k6 run infra/load/k6-ws.js --summary-trend-stats "avg,min,med,max,p(90),p(95),p(99)" --summary-export infra/load/results/base.json
+          docker compose -f infra/docker-compose.yml down -v
+
+      - name: Run current branch benchmark
+        run: |
+          mkdir -p infra/load/results
+          git checkout "${{ github.sha }}"
+          docker compose -f infra/docker-compose.yml up -d --build --wait
+          k6 run infra/load/k6-ws.js --summary-trend-stats "avg,min,med,max,p(90),p(95),p(99)" --summary-export infra/load/results/pr.json
+          docker compose -f infra/docker-compose.yml down -v
+
+      - name: Compare base vs PR
+        if: github.event_name == 'pull_request'
+        run: |
+          bun infra/load/compare-k6.mjs infra/load/results/base.json infra/load/results/pr.json > infra/load/results/comparison.md
+          cat infra/load/results/comparison.md
+
+      - name: Build single-run summary
+        if: github.event_name != 'pull_request'
+        run: |
+          printf "## k6 Performance Run\n\nSingle-branch run (no base ref comparison).\n" > infra/load/results/comparison.md
+
+      - name: Enforce perf gate on PR
+        if: github.event_name == 'pull_request'
+        run: |
+          bun infra/load/compare-k6.mjs --gate infra/load/results/base.json infra/load/results/pr.json > /dev/null
+
+      - name: Upload performance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-performance-results
+          path: infra/load/results/
+          if-no-files-found: error
+
+      - name: Comment PR with performance summary
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const fs = require('node:fs');
+            const body = fs.readFileSync('infra/load/results/comparison.md', 'utf8');
+            const marker = '<!-- nexis-k6-perf -->';
+            const finalBody = `${marker}\n${body}`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body: finalBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: finalBody,
+              });
+            }
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f infra/docker-compose.yml down -v

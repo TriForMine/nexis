@@ -1,0 +1,72 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cargo test
+        working-directory: server
+        run: cargo test
+
+  sdk-ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - name: Install
+        working-directory: sdks/ts
+        run: bun install --frozen-lockfile
+      - name: Test
+        working-directory: sdks/ts
+        run: bun test
+      - name: Typecheck
+        working-directory: sdks/ts
+        run: bunx tsc -p tsconfig.json --noEmit
+
+  control-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - name: Install
+        working-directory: dashboard/control-api
+        run: bun install --frozen-lockfile
+      - name: Typecheck
+        working-directory: dashboard/control-api
+        run: bunx tsc --noEmit
+      - name: Test
+        working-directory: dashboard/control-api
+        run: bun test
+
+  compose-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - name: Start stack
+        env:
+          NEXIS_SESSION_TTL_SECONDS: "5"
+        run: docker compose -f infra/docker-compose.yml up -d --build --wait
+      - name: Run smoke
+        env:
+          NEXIS_SESSION_TTL_SECONDS: "5"
+        run: bun infra/smoke.ts
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -f infra/docker-compose.yml logs --no-color
+      - name: Teardown
+        if: always()
+        run: docker compose -f infra/docker-compose.yml down -v

@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nexis/sdk-ts": ["../../sdks/ts/src/index.ts"],
+      "@nexis/sdk-ts/*": ["../../sdks/ts/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

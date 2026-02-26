@@ -1,0 +1,9 @@
+[package]
+name = "rpc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+protocol = { path = "../protocol" }
+thiserror.workspace = true
