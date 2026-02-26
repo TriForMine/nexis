@@ -18,12 +18,7 @@ const banner = (
   </Banner>
 )
 
-const navbar = (
-  <Navbar
-    logo={<b>NEXIS</b>}
-    projectLink="https://github.com/TriForMine/nexis"
-  />
-)
+const navbar = <Navbar logo={<b>NEXIS</b>} />
 
 const footer = (
   <Footer>

@@ -1,13 +1,15 @@
 ---
 title: Control API
-description: Project, key, token, and internal key-status endpoints.
+description: Endpoints used by game backends for project, key, and token flows.
 ---
 
 # Control API
 
 Base URL (local): `http://localhost:3000`
 
-## Public Endpoints
+Use the control API from your backend services, not directly from game clients.
+
+## Main Endpoints
 
 - `POST /projects`
 - `GET /projects`
@@ -22,28 +24,16 @@ Base URL (local): `http://localhost:3000`
 
 - `GET /internal/key-status`
 
-Used by data plane during handshake to enforce key revoke/rotate/scope.
+This endpoint is intended for data-plane internal validation (revocation/scope checks).
 
-## Token Payload
+## Token Claims
 
-```json
-{
-  "project_id": "...",
-  "issued_at": "2026-02-25T17:27:50.362Z",
-  "expires_at": "2026-02-25T18:27:50.362Z",
-  "key_id": "optional",
-  "aud": "optional"
-}
-```
+Nexis client tokens include:
 
-Token format:
+- `project_id`
+- `issued_at`
+- `expires_at`
+- optional `key_id`
+- optional `aud`
 
-`base64url(claims).base64url(hmac_sha256(payload, secret))`
-
-## Database
-
-Control API uses Postgres and Drizzle migrations in:
-
-- `dashboard/control-api/drizzle/`
-
-Migrations run at startup in Docker/local workflows.
+Keep token TTL short for gameplay sessions.
