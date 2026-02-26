@@ -17,6 +17,8 @@ examples/wasm-plugins/**/target/
 site/
 docs-site/.next/
 docs-site/out/
+docs-site/public/_pagefind/
+_pagefind/
 *.tsbuildinfo
 
 # Logs
