@@ -5,10 +5,10 @@
     "": {
       "name": "@nexis/sdk-ts",
       "dependencies": {
-        "msgpackr": "^1.11.2",
+        "msgpackr": "1.11.8",
       },
       "devDependencies": {
-        "typescript": "^5.7.3",
+        "typescript": "5.9.3",
       },
     },
   },
