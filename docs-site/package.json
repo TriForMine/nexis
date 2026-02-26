@@ -8,9 +8,6 @@
     "postbuild": "pagefind --site out --output-path out/_pagefind --exclude-selectors \"aside\" --exclude-selectors \"#nextra-search-results\"",
     "start": "next start -p 3005"
   },
-  "devDependencies": {
-    "pagefind": "1.4.0"
-  },
   "dependencies": {
     "next": "15.5.12",
     "nextra": "4.6.1",

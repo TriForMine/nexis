@@ -1,15 +1,14 @@
 export default {
   index: {
-    title: 'Overview',
-    type: 'page'
+    title: "Overview",
   },
   protocol: {
-    title: 'Protocol'
+    title: "Protocol",
   },
-  'control-api': {
-    title: 'Control API'
+  "control-api": {
+    title: "Control API",
   },
-  'typescript-sdk': {
-    title: 'TypeScript SDK'
-  }
-}
+  "typescript-sdk": {
+    title: "TypeScript SDK",
+  },
+};

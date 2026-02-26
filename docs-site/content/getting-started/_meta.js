@@ -1,18 +1,17 @@
 export default {
   index: {
-    title: 'Overview',
-    type: 'page'
+    title: "Overview",
   },
   quickstart: {
-    title: 'Quickstart'
+    title: "Quickstart",
   },
-  'connect-client': {
-    title: 'Connect a Client'
+  "connect-client": {
+    title: "Connect a Client",
   },
-  'room-basics': {
-    title: 'Room Basics'
+  "room-basics": {
+    title: "Room Basics",
   },
   authentication: {
-    title: 'Auth in Real Games'
-  }
-}
+    title: "Auth in Real Games",
+  },
+};
