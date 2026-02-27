@@ -81,7 +81,7 @@ function isInternalAuthorized(
   expectedToken: string | null,
 ): boolean {
   if (!expectedToken) {
-    return true;
+    return false;
   }
   return request.headers.get("x-nexis-internal-token") === expectedToken;
 }

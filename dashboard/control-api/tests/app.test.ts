@@ -460,6 +460,24 @@ describe("control api", () => {
     expect(denied.status).toBe(401);
   });
 
+  test("internal key status is denied when no token is configured", async () => {
+    const store = createMemoryStore();
+    const app = createControlApiApp(store, {
+      demoProjectId: "demo-project",
+      demoSecret: "demo-secret",
+      masterSecret: "master-secret",
+      internalToken: undefined,
+      now: () => new Date("2026-02-25T17:30:00.000Z"),
+      randomUUID: () => "id-1",
+      createProjectSecret: () => "secret-1",
+    });
+
+    const response = await app.handle(
+      jsonRequest("/internal/key-status?project_id=id-1&key_id=id-1"),
+    );
+    expect(response.status).toBe(401);
+  });
+
   test("internal key status returns revoked key details", async () => {
     const app = createTestApp();
 
