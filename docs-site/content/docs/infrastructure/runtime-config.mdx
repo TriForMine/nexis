@@ -22,17 +22,6 @@ Control-plane variables:
 
 Start with defaults, then tune based on load tests and game behavior.
 
-
-## Runtime Config Loading
-
-```mermaid
-flowchart LR
-  A[Environment Variables] --> B[Parse + validate]
-  B --> C[Runtime config struct]
-  C --> D[Server startup]
-```
-
-
 ## Typed Config Parser
 
 ```ts twoslash

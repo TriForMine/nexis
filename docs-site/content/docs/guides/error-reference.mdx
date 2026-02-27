@@ -81,20 +81,6 @@ Fix:
 2. Confirm browser is calling control API URL you expect.
 
 
-
-## Error Handling Flow
-
-```mermaid
-flowchart TD
-  A[Receive error] --> B{retriable?}
-  B -->|Yes| C[Retry with backoff]
-  B -->|No| D[Show user-facing failure]
-  C --> E{still failing?}
-  E -->|Yes| F[Escalate + logs]
-  E -->|No| G[Continue]
-```
-
-
 ## Typed Error Codes
 
 ```ts twoslash

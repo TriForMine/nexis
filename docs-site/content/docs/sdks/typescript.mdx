@@ -123,13 +123,3 @@ bun test
 bunx tsc -p tsconfig.json --noEmit
 ```
 
-
-## TypeScript SDK Runtime Flow
-
-```mermaid
-flowchart LR
-  A[connect] --> B[joinOrCreate]
-  B --> C[onStateChange]
-  C --> D[room.send]
-  D --> E[onMessage]
-```

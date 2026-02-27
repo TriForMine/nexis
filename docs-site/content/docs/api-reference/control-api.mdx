@@ -52,22 +52,6 @@ curl -X POST http://localhost:3000/tokens \
   -d '{"project_id":"<project-id>","key_id":"<key-id>","ttl_seconds":900}'
 ```
 
-
-## Token Mint Flow
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant B as Backend
-  participant A as Control API
-  participant D as Data Plane
-  B->>A: POST /tokens
-  A-->>B: token
-  B->>D: handshake(project_id, token)
-  D-->>B: handshake.ok
-```
-
-
 ## Typed Control API Call
 
 ```ts twoslash

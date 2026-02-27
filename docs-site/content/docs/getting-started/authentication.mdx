@@ -50,24 +50,6 @@ curl -X POST http://localhost:3000/tokens \
   -d '{"project_id":"<project-id>","key_id":"<key-id>","ttl_seconds":900}'
 ```
 
-
-## Auth Handshake Flow
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant C as Client
-  participant B as Backend
-  participant A as Control API
-  participant D as Data Plane
-  B->>A: POST /tokens
-  A-->>B: signed token
-  B-->>C: token
-  C->>D: handshake(project_id, token)
-  D-->>C: handshake.ok or auth error
-```
-
-
 ## Typed Token Claims
 
 ```ts twoslash

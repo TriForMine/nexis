@@ -58,17 +58,3 @@ async function start() {
 
 See full signatures in [TypeScript SDK](/docs/sdks/typescript/).
 
-
-## Connection Lifecycle
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant C as Client SDK
-  participant D as Data Plane
-  C->>D: WS connect
-  C->>D: handshake
-  D-->>C: handshake.ok
-  C->>D: room.join_or_create
-  D-->>C: state.snapshot
-```

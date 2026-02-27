@@ -61,17 +61,6 @@ Expected behavior:
 
 For protocol details see [Protocol](/docs/api-reference/protocol/).
 
-
-## Counter Room Loop
-
-```mermaid
-flowchart LR
-  A[Client sends inc] --> B[Room logic increments state]
-  B --> C[state.patch emitted]
-  C --> D[Client renders new counter]
-```
-
-
 ## Typed Counter Action
 
 ```ts twoslash

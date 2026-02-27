@@ -30,19 +30,6 @@ bun add @triformine/nexis-sdk
 
 Continue with [Quickstart](/docs/getting-started/quickstart/).
 
-
-## Integration Path
-
-```mermaid
-flowchart TD
-  A[Connect] --> B[Join Room]
-  B --> C[Receive state.snapshot]
-  C --> D[Send room actions]
-  D --> E[Apply state.patch]
-  E --> F[Reconnect/resume]
-```
-
-
 ## Typed Join Step
 
 ```ts twoslash

@@ -107,20 +107,6 @@ Hook return payload JSON:
 
 `state` and `event` are optional.
 
-
-## Plugin Lifecycle
-
-```mermaid
-flowchart TD
-  A[on_create] --> B[on_join]
-  B --> C[on_message]
-  C --> D[on_tick]
-  D --> C
-  C --> E[on_leave]
-  E --> F[on_dispose]
-```
-
-
 ## Typed Custom Message Contract
 
 ```ts twoslash

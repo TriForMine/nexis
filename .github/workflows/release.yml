@@ -494,18 +494,32 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download all artifacts
+      - name: Download rust-server artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: |
-            rust-server-*
-            control-api-*
+          pattern: rust-server-*
           path: release-artifacts
           merge-multiple: true
+      - name: Download control-api artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: control-api-*
+          path: release-artifacts
+          merge-multiple: true
+      - name: Verify release assets
+        shell: bash
+        run: |
+          ls -lah release-artifacts || true
+          count="$(find release-artifacts -type f | wc -l | tr -d ' ')"
+          if [[ "${count}" == "0" ]]; then
+            echo "No release assets downloaded" >&2
+            exit 1
+          fi
       - name: Publish GitHub release assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: release-artifacts/*
+          files: |
+            release-artifacts/**

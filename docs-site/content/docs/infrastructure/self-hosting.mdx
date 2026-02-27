@@ -24,26 +24,6 @@ docker compose -f infra/docker-compose.yml up -d --build --wait
 - public internet: data plane WS endpoint
 - private/internal: control API + Postgres
 
-
-## Self-host Topology
-
-```mermaid
-flowchart TD
-  subgraph Edge
-    LB[Load Balancer]
-  end
-  subgraph Services
-    DP[Data Plane]
-    CP[Control API]
-    DB[(Postgres)]
-  end
-  LB --> DP
-  LB --> CP
-  CP --> DB
-  CP --> DP
-```
-
-
 ## Typed Compose Service Map
 
 ```ts twoslash

@@ -28,17 +28,6 @@ k6 run infra/load/k6-ws.js
 
 Run it regularly after protocol or room-logic changes.
 
-
-## Telemetry Pipeline
-
-```mermaid
-flowchart LR
-  A[Data Plane /metrics] --> P[Prometheus]
-  B[Control API /metrics] --> P
-  P --> G[Grafana]
-```
-
-
 ## Typed Metrics Snapshot
 
 ```ts twoslash

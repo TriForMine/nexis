@@ -85,19 +85,6 @@ Patch payload:
 }
 ```
 
-```mermaid
-sequenceDiagram
-  autonumber
-  participant S as Server
-  participant C as Client
-  S-->>C: state.snapshot(seq=42, checksum)
-  S-->>C: state.patch(seq=43, ops)
-  C->>C: Apply patch + verify ordering/checksum
-  C-->>S: state.ack(seq=43)
-  C-->>S: state.resync (only if mismatch/gap)
-  S-->>C: state.snapshot(seq=latest, checksum)
-```
-
 ## Room message payload contract
 
 When sending custom room messages (`t = "room.message"`), payload shape is:

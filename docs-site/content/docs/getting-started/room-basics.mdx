@@ -58,20 +58,6 @@ When a client leaves:
 - empty room may auto-dispose (depending on room lifecycle)
 - reconnect resume is possible within configured session TTL
 
-
-## Room Lifecycle
-
-```mermaid
-stateDiagram-v2
-  [*] --> Joining
-  Joining --> Active: room.join_or_create ok
-  Active --> Syncing: state.patch
-  Syncing --> Active: state.ack
-  Active --> Left: room.leave
-  Left --> [*]
-```
-
-
 ## Typed Room API
 
 ```ts twoslash

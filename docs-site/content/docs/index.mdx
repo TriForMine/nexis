@@ -50,18 +50,6 @@ room.onStateChange((state) => render(state));
 room.send("inc", { by: 1 });
 ```
 
-
-## Architecture Snapshot
-
-```mermaid
-flowchart LR
-  C[Game Clients] --> D[Rust Data Plane]
-  O[Control API] --> D
-  O --> P[(Postgres)]
-  D --> M[Metrics]
-```
-
-
 ## Typed Bootstrap Example
 
 ```ts twoslash

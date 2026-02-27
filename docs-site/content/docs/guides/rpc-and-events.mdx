@@ -47,20 +47,6 @@ Practical split:
 - `player.move` -> often unreliable
 - `attack.commit` or `purchase.confirm` -> reliable
 
-
-## RPC vs Events
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant C as Client
-  participant S as Server
-  C->>S: rpc.request(rid)
-  S-->>C: rpc.response(rid)
-  S-->>C: room.message(event)
-```
-
-
 ## Typed RPC Request
 
 ```ts twoslash

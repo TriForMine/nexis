@@ -65,18 +65,6 @@ Some high-frequency types may be routed with unreliable intent by policy (exampl
 Use unreliable intent only for transient data that can be dropped safely.
 
 
-
-## Message Families
-
-```mermaid
-flowchart LR
-  A[Messages] --> B[room.*]
-  A --> C[state.*]
-  A --> D[rpc.*]
-  A --> E[matchmaking.*]
-```
-
-
 ## Typed Message Dispatcher
 
 ```ts twoslash

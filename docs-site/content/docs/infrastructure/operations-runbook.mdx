@@ -52,20 +52,6 @@ description: Day-2 operations for running Nexis in production.
 5. If needed: roll back to last known healthy release.
 
 
-
-## Incident Response
-
-```mermaid
-flowchart TD
-  A[Alert fired] --> B[Check metrics + logs]
-  B --> C{Scope identified?}
-  C -->|No| D[Escalate]
-  C -->|Yes| E[Mitigate]
-  E --> F[Verify recovery]
-  F --> G[Postmortem]
-```
-
-
 ## Typed Incident State
 
 ```ts twoslash
