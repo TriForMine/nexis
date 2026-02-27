@@ -37,6 +37,15 @@ This document defines the release process for Nexis.
 
 Workflow: `.github/workflows/release.yml`
 
+On push to `main` it:
+
+1. validates server + SDK + control API tests/typechecks
+2. builds and pushes Docker images with:
+   - `:next`
+   - `:sha-<commit>`
+3. publishes npm prerelease under `next` dist-tag:
+   - version format: `<base>-next.<run_number>.<run_attempt>`
+
 On tag push (`v*`) it:
 
 1. validates server + SDK + control API tests/typechecks
@@ -45,6 +54,7 @@ On tag push (`v*`) it:
    - `ghcr.io/<owner>/control-api:<tag>`
    - `ghcr.io/<owner>/dashboard-ui:<tag>`
    - `ghcr.io/<owner>/web-demo:<tag>`
+   - plus `:latest`
 3. publishes `@triformine/nexis-sdk` to npm
 
 ## npm Trusted Publishing (OIDC)

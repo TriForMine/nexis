@@ -16,10 +16,9 @@ This tutorial walks through the full loop your game will use repeatedly:
 ## Step 1: Connect with SDK
 
 ```ts
-import { NexisClient } from '@triformine/nexis-sdk'
+import { connect } from '@triformine/nexis-sdk'
 
-const client = new NexisClient()
-await client.connect('ws://localhost:4000', {
+const client = await connect('ws://localhost:4000', {
   projectId,
   token
 })
@@ -28,7 +27,7 @@ await client.connect('ws://localhost:4000', {
 ## Step 2: Join or Create Room
 
 ```ts
-const room = await client.joinOrCreate('counter_plugin_room', { room: 'default' })
+const room = await client.joinOrCreate('counter_plugin_room', { roomId: 'counter_plugin_room:default' })
 ```
 
 After join, the client should receive an initial `state.snapshot`.

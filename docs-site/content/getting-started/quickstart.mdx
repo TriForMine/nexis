@@ -41,15 +41,14 @@ curl -X POST http://localhost:3000/tokens \
 ## 4. Connect and join room
 
 ```ts
-import { NexisClient } from "@triformine/nexis-sdk";
+import { connect } from "@triformine/nexis-sdk";
 
-const client = new NexisClient();
-await client.connect("ws://localhost:4000", {
+const client = await connect("ws://localhost:4000", {
   projectId: "<project-id>",
   token
 });
 
-const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
+const room = await client.joinOrCreate("counter_plugin_room", { roomId: "counter_plugin_room:default" });
 ```
 
 ## 5. Read initial state and react to patches

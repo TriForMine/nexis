@@ -74,7 +74,7 @@ A plugin room can then be joined with room type `duel_room`.
 ## 4. Connect client and send custom types
 
 ```ts
-const room = await client.joinOrCreate("duel_room", { room: "arena-1" });
+const room = await client.joinOrCreate("duel_room", { roomId: "duel_room:arena-1" });
 room.send("player.move", { x: 12, y: 4, seq: 10 });
 room.send("shoot", { dir: 90, weapon: "smg" });
 ```

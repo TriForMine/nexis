@@ -22,10 +22,9 @@ Return the token to your authenticated player session.
 ## 2. Client connects to data plane
 
 ```ts
-import { NexisClient } from "@triformine/nexis-sdk";
+import { connect } from "@triformine/nexis-sdk";
 
-const client = new NexisClient();
-await client.connect("ws://localhost:4000", {
+const client = await connect("ws://localhost:4000", {
   projectId: "<project-id>",
   token,
 });

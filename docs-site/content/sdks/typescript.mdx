@@ -10,15 +10,15 @@ Package: `@triformine/nexis-sdk`
 ## Create and connect client
 
 ```ts
-import { NexisClient } from "@triformine/nexis-sdk";
+import { connect } from "@triformine/nexis-sdk";
 
-const client = new NexisClient();
-await client.connect(wsUrl, { projectId, token });
+const client = await connect(wsUrl, { projectId, token });
 ```
 
 ## `NexisClient` methods
 
 - `connect(url, { projectId?, token? })`
+- `NexisClient.connect(url, { projectId?, token? })`
 - `joinOrCreate(roomType, options)`
 - `listRooms(roomType?)`
 - `enqueueMatchmaking(roomType, size)`

@@ -2,6 +2,8 @@ name: release
 
 on:
   push:
+    branches:
+      - "main"
     tags:
       - "v*"
   workflow_dispatch:
@@ -75,6 +77,25 @@ jobs:
             dockerfile: examples/web-demo/Dockerfile
     steps:
       - uses: actions/checkout@v4
+      - name: Determine release channel
+        id: channel
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=next" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Compute image tags
+        id: tags
+        run: |
+          if [[ "${{ steps.channel.outputs.channel }}" == "stable" ]]; then
+            echo "primary=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "secondary=latest" >> "$GITHUB_OUTPUT"
+          else
+            short_sha="${GITHUB_SHA::7}"
+            echo "primary=next" >> "$GITHUB_OUTPUT"
+            echo "secondary=sha-${short_sha}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to GHCR
@@ -89,8 +110,8 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}
           tags: |
-            type=raw,value=${{ github.ref_name }}
-            type=sha,prefix=sha-
+            type=raw,value=${{ steps.tags.outputs.primary }}
+            type=raw,value=${{ steps.tags.outputs.secondary }}
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -111,6 +132,16 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      - name: Determine npm dist-tag
+        id: npm_tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+            echo "channel=next" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -127,6 +158,11 @@ jobs:
       - name: Typecheck SDK
         working-directory: sdks/ts
         run: bunx tsc -p tsconfig.json --noEmit
+      - name: Set prerelease version for next channel
+        if: steps.npm_tag.outputs.channel == 'next'
+        working-directory: sdks/ts
+        run: |
+          node -e "const fs=require('fs'); const p='package.json'; const j=JSON.parse(fs.readFileSync(p,'utf8')); const base=String(j.version).split('-')[0]; const sha=String(process.env.GITHUB_SHA||'dev').slice(0,7); j.version=`${base}-next.${sha}`; fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n'); console.log('Publishing version', j.version);"
       - name: Publish SDK to npm
         working-directory: sdks/ts
-        run: npm publish --access public --provenance
+        run: npm publish --access public --provenance --tag ${{ steps.npm_tag.outputs.tag }}

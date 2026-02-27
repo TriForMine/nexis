@@ -8,7 +8,7 @@ description: Join/create, state subscriptions, room messages, and cleanup.
 ## Join or create
 
 ```ts
-const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
+const room = await client.joinOrCreate("counter_plugin_room", { roomId: "counter_plugin_room:default" });
 ```
 
 `roomType` picks gameplay logic.  

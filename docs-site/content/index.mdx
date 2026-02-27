@@ -41,10 +41,11 @@ Control plane is for management, not realtime traffic.
 ## SDK At A Glance
 
 ```ts
-const client = new NexisClient();
-await client.connect("ws://localhost:4000", { projectId, token });
+import { connect } from "@triformine/nexis-sdk";
 
-const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
+const client = await connect("ws://localhost:4000", { projectId, token });
+
+const room = await client.joinOrCreate("counter_plugin_room", { roomId: "counter_plugin_room:default" });
 room.onStateChange((state) => render(state));
 room.send("inc", { by: 1 });
 ```

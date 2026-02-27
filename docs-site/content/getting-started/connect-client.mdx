@@ -8,11 +8,9 @@ description: Establish a session, negotiate codec, and join your first room.
 ## Basic connection
 
 ```ts
-import { NexisClient } from "@triformine/nexis-sdk";
+import { connect } from "@triformine/nexis-sdk";
 
-const client = new NexisClient();
-
-await client.connect("ws://localhost:4000", {
+const client = await connect("ws://localhost:4000", {
   projectId: "your-project-id",
   token: "your-client-token",
 });

@@ -23,7 +23,7 @@ await client.dequeueMatchmaking();
 
 ```ts
 client.onMatchFound(async (match) => {
-  await client.joinOrCreate(match.roomType, { room: match.room });
+  await client.joinOrCreate(match.roomType, { roomId: match.room });
 });
 ```
 
