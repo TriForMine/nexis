@@ -27,7 +27,65 @@ env:
   IMAGE_NAMESPACE: ghcr.io/${{ github.repository_owner }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      sdk_ts: ${{ steps.set.outputs.sdk_ts }}
+      image_rust_server: ${{ steps.set.outputs.image_rust_server }}
+      image_control_api: ${{ steps.set.outputs.image_control_api }}
+      image_dashboard_ui: ${{ steps.set.outputs.image_dashboard_ui }}
+      image_web_demo: ${{ steps.set.outputs.image_web_demo }}
+      any_images: ${{ steps.set.outputs.any_images }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        if: github.ref == 'refs/heads/main'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            sdk_ts:
+              - 'sdks/ts/**'
+            image_rust_server:
+              - 'server/**'
+              - 'plugins/**'
+              - 'examples/wasm-plugins/**'
+            image_control_api:
+              - 'dashboard/control-api/**'
+            image_dashboard_ui:
+              - 'dashboard/ui/**'
+            image_web_demo:
+              - 'examples/web-demo/**'
+              - 'sdks/ts/**'
+      - id: set
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]] || [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            sdk_ts=true
+            image_rust_server=true
+            image_control_api=true
+            image_dashboard_ui=true
+            image_web_demo=true
+          else
+            sdk_ts="${{ steps.filter.outputs.sdk_ts }}"
+            image_rust_server="${{ steps.filter.outputs.image_rust_server }}"
+            image_control_api="${{ steps.filter.outputs.image_control_api }}"
+            image_dashboard_ui="${{ steps.filter.outputs.image_dashboard_ui }}"
+            image_web_demo="${{ steps.filter.outputs.image_web_demo }}"
+          fi
+
+          any_images=false
+          if [[ "${image_rust_server}" == "true" ]] || [[ "${image_control_api}" == "true" ]] || [[ "${image_dashboard_ui}" == "true" ]] || [[ "${image_web_demo}" == "true" ]]; then
+            any_images=true
+          fi
+
+          echo "sdk_ts=${sdk_ts}" >> "$GITHUB_OUTPUT"
+          echo "image_rust_server=${image_rust_server}" >> "$GITHUB_OUTPUT"
+          echo "image_control_api=${image_control_api}" >> "$GITHUB_OUTPUT"
+          echo "image_dashboard_ui=${image_dashboard_ui}" >> "$GITHUB_OUTPUT"
+          echo "image_web_demo=${image_web_demo}" >> "$GITHUB_OUTPUT"
+          echo "any_images=${any_images}" >> "$GITHUB_OUTPUT"
+
   validate:
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,8 +116,7 @@ jobs:
         run: bunx tsc --noEmit
 
   publish-images:
-    needs: validate
-    if: github.event_name == 'push' || inputs.publish_images == true
+    needs: [changes, validate]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -75,6 +132,14 @@ jobs:
             dockerfile: dashboard/ui/Dockerfile
           - service: web-demo
             dockerfile: examples/web-demo/Dockerfile
+    if: |
+      (github.event_name == 'push' || inputs.publish_images == true) &&
+      (
+        (matrix.service == 'rust-server' && needs.changes.outputs.image_rust_server == 'true') ||
+        (matrix.service == 'control-api' && needs.changes.outputs.image_control_api == 'true') ||
+        (matrix.service == 'dashboard-ui' && needs.changes.outputs.image_dashboard_ui == 'true') ||
+        (matrix.service == 'web-demo' && needs.changes.outputs.image_web_demo == 'true')
+      )
     steps:
       - uses: actions/checkout@v4
       - name: Determine release channel
@@ -124,8 +189,8 @@ jobs:
           cache-to: type=gha,mode=max
 
   publish-sdk-npm:
-    needs: validate
-    if: github.event_name == 'push' || inputs.publish_npm == true
+    needs: [changes, validate]
+    if: (github.event_name == 'push' || inputs.publish_npm == true) && needs.changes.outputs.sdk_ts == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -162,7 +227,16 @@ jobs:
         if: steps.npm_tag.outputs.channel == 'next'
         working-directory: sdks/ts
         run: |
-          node -e "const fs=require('fs'); const p='package.json'; const j=JSON.parse(fs.readFileSync(p,'utf8')); const base=String(j.version).split('-')[0]; const sha=String(process.env.GITHUB_SHA||'dev').slice(0,7); j.version=`${base}-next.${sha}`; fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n'); console.log('Publishing version', j.version);"
+          node <<'NODE'
+          const fs = require("fs");
+          const p = "package.json";
+          const j = JSON.parse(fs.readFileSync(p, "utf8"));
+          const base = String(j.version).split("-")[0];
+          const sha = String(process.env.GITHUB_SHA || "dev").slice(0, 7);
+          j.version = `${base}-next.${sha}`;
+          fs.writeFileSync(p, `${JSON.stringify(j, null, 2)}\n`);
+          console.log("Publishing version", j.version);
+          NODE
       - name: Publish SDK to npm
         working-directory: sdks/ts
         run: npm publish --access public --provenance --tag ${{ steps.npm_tag.outputs.tag }}

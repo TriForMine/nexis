@@ -106,7 +106,7 @@ jobs:
       - name: Start stack
         env:
           NEXIS_SESSION_TTL_SECONDS: "5"
-        run: docker compose -f infra/docker-compose.yml up -d --build --wait
+        run: docker compose -f infra/docker-compose.yml up -d --build --wait postgres control-api rust-server
       - name: Run smoke
         env:
           NEXIS_SESSION_TTL_SECONDS: "5"
