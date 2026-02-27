@@ -18,7 +18,7 @@ RUN cargo build --release -p transport_ws
 RUN rustup target add wasm32-unknown-unknown
 RUN cargo build --manifest-path /app/examples/wasm-plugins/counter_rust_plugin/Cargo.toml --target wasm32-unknown-unknown --release
 
-FROM debian:bookworm-slim
+FROM debian:13.3-slim
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates netcat-openbsd \
   && rm -rf /var/lib/apt/lists/* \
