@@ -2,6 +2,14 @@ name: perf-k6
 
 on:
   pull_request:
+    paths:
+      - "infra/load/**"
+      - "infra/docker-compose.yml"
+      - "server/**"
+      - "plugins/**"
+      - "examples/wasm-plugins/**"
+      - "dashboard/control-api/**"
+      - ".github/workflows/perf-k6.yml"
   workflow_dispatch:
 
 permissions:
