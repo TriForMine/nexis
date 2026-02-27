@@ -4,6 +4,10 @@
   "private": false,
   "author": "TriForMine <quentin@triformine.dev> (https://github.com/TriForMine/)",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TriForMine/nexis"
+  },
   "publishConfig": {
     "access": "public"
   },
