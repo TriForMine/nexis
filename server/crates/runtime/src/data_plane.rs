@@ -373,7 +373,16 @@ fn register_configured_room_plugins(registry: &mut RoomTypeRegistry) {
 }
 
 fn load_master_secret() -> String {
-    env::var("NEXIS_MASTER_SECRET").unwrap_or_else(|_| "nexis-dev-master-secret".to_owned())
+    match env::var("NEXIS_MASTER_SECRET") {
+        Ok(secret) => secret,
+        Err(_) => {
+            eprintln!(
+                "[nexis] WARNING: NEXIS_MASTER_SECRET is not set. \
+                Using insecure dev default. Set this env var before deploying to production."
+            );
+            "nexis-dev-master-secret".to_owned()
+        }
+    }
 }
 
 fn load_wasm_room_plugins() -> WasmRoomPlugins {

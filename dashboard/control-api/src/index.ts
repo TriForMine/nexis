@@ -13,6 +13,22 @@ const masterSecret =
 const internalToken =
   process.env.NEXIS_INTERNAL_TOKEN ?? "nexis-dev-internal-token";
 
+if (!process.env.NEXIS_MASTER_SECRET) {
+  console.warn(
+    "[nexis] WARNING: NEXIS_MASTER_SECRET is not set. Using insecure dev default. Set this env var before deploying to production.",
+  );
+}
+if (!process.env.NEXIS_INTERNAL_TOKEN) {
+  console.warn(
+    "[nexis] WARNING: NEXIS_INTERNAL_TOKEN is not set. Using insecure dev default. Set this env var before deploying to production.",
+  );
+}
+if (!process.env.NEXIS_DEMO_PROJECT_SECRET) {
+  console.warn(
+    "[nexis] WARNING: NEXIS_DEMO_PROJECT_SECRET is not set. Using insecure dev default. Set this env var before deploying to production.",
+  );
+}
+
 await initializeBetterAuth();
 await migrate();
 await seedDemoData(
