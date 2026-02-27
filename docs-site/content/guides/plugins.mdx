@@ -5,26 +5,54 @@ description: Extend gameplay logic with Rust or WASM plugins.
 
 # Room Plugins
 
-You can define room behavior through plugins instead of hardcoding every room in core server logic.
+Room plugins are where your game rules live.
 
-## Option A: Rust Plugin
+Use plugins when you want custom room behavior such as:
 
-Compile-time registration through room plugin API.
+- movement simulation
+- combat resolution
+- inventory updates
+- game-specific events/messages
 
-Best when:
+## Two plugin modes
 
-- you control server deployment
-- you want maximum runtime performance and Rust-native tooling
-
-## Option B: WASM Plugin
-
-Runtime-loaded plugin via `NEXIS_WASM_ROOM_PLUGINS`.
+### 1) Rust plugin (compile-time)
 
 Best when:
 
-- you want to ship or swap room logic without rebuilding the server image
-- you want strict ABI boundary for gameplay scripts/modules
+- you control server build/deploy
+- you want native Rust performance and direct code integration
 
-Reference example:
+### 2) WASM plugin (runtime-loaded)
 
-- `examples/wasm-plugins/counter_rust_plugin`
+Best when:
+
+- you want to ship new room logic without rebuilding data-plane image
+- you want a stable host/plugin boundary
+
+Configured through `NEXIS_WASM_ROOM_PLUGINS`.
+
+## Message contract inside plugins
+
+Room message payload in plugin `on_message`:
+
+```json
+{
+  "type": "player.move",
+  "data": { "x": 10, "y": 4, "seq": 18 }
+}
+```
+
+This means your plugin can define custom gameplay types freely (`player.move`, `shoot`, `chat.send`, etc.).
+
+## Minimal plugin logic pattern
+
+1. Read `input.type`.
+2. Parse `input.data`.
+3. Compute next authoritative state.
+4. Return updated state and optional emitted event.
+
+## References
+
+- Tutorial: [Create a Custom Room Plugin](/tutorials/custom-room-plugin/)
+- Example code: `examples/wasm-plugins/counter_rust_plugin`

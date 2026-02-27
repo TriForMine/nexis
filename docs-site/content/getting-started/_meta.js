@@ -5,6 +5,9 @@ export default {
   quickstart: {
     title: "Quickstart",
   },
+  "game-loop": {
+    title: "Build a Real Game Loop",
+  },
   "connect-client": {
     title: "Connect a Client",
   },

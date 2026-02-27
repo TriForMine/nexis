@@ -1,0 +1,66 @@
+---
+title: Message Catalog
+description: Canonical message types, direction, payload shape, and channel intent.
+---
+
+# Message Catalog
+
+Legend:
+
+- Direction: `C->S` client to server, `S->C` server to client
+- Channel intent: `reliable` or `unreliable` logical priority
+
+## Handshake and session
+
+| Type | Direction | Purpose | Payload (`p`) | Channel |
+|---|---|---|---|---|
+| `handshake` | C->S | Start session | handshake object (`v`, `codecs`, `project_id`, `token`, optional `session_id`) | reliable |
+| `handshake.ok` | S->C | Handshake accepted | `{ codec, session_id? }` | reliable |
+| `error` | S->C | Error response | `{ reason: string }` | reliable |
+
+## Room lifecycle
+
+| Type | Direction | Purpose | Payload (`p`) | Channel |
+|---|---|---|---|---|
+| `room.join_or_create` | C->S | Join existing room or create one | `{ room_type, room?, options? }` | reliable |
+| `room.leave` | C->S | Leave room | `{ room }` | reliable |
+| `room.list` | C->S | List active rooms | `{ room_type? }` | reliable |
+| `rpc.response` | S->C | Correlated response for RPC requests | `{ ok, ... }` | reliable |
+
+## Room messaging
+
+| Type | Direction | Purpose | Payload (`p`) | Channel |
+|---|---|---|---|---|
+| `room.message` | C->S and S->C | Custom room message/event | `{ type: string, data: any }` | reliable or policy-based |
+| `room.message.bytes` | C->S and S->C | Custom binary room message | `{ type: string, data_b64: string }` | reliable or policy-based |
+
+Notes:
+
+- Game-specific action type is `p.type` (example: `player.move`, `shoot`).
+- Plugin room logic reads this via `input.type` / `input.data`.
+
+## State sync
+
+| Type | Direction | Purpose | Payload (`p`) | Channel |
+|---|---|---|---|---|
+| `state.snapshot` | S->C | Full authoritative room state | `{ state, seq, checksum? }` | reliable |
+| `state.patch` | S->C | Incremental room state changes | `{ ops, seq, checksum? }` | reliable |
+| `state.ack` | C->S | Acknowledge latest applied state seq | `{ room, seq, checksum? }` | reliable |
+| `state.resync` | C->S | Request fresh snapshot | `{ room, reason? }` | reliable |
+
+## Matchmaking
+
+| Type | Direction | Purpose | Payload (`p`) | Channel |
+|---|---|---|---|---|
+| `matchmaking.enqueue` | C->S | Queue player for room type | `{ room_type, size }` | reliable |
+| `matchmaking.dequeue` | C->S | Remove player from queue | `{ room_type? }` | reliable |
+| `match.found` | S->C | Match created/assigned | `{ room, room_type, size, participants }` | reliable |
+
+## Fast-path examples
+
+Some high-frequency types may be routed with unreliable intent by policy (example categories):
+
+- position/aim/input delta updates
+
+Use unreliable intent only for transient data that can be dropped safely.
+

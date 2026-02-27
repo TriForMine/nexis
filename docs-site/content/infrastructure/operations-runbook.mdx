@@ -1,0 +1,53 @@
+---
+title: Operations Runbook
+description: Day-2 operations for running Nexis in production.
+---
+
+# Operations Runbook
+
+## Daily checks
+
+- Data plane healthy and accepting websocket connections.
+- Control API healthy and serving token/key endpoints.
+- Postgres healthy and migrations current.
+- Error rates and reconnect rates within normal range.
+
+## Key metrics to monitor
+
+- handshake success/failure rate
+- room join success/failure rate
+- rpc error rate
+- reconnect/resume success rate
+- state resync frequency
+
+## Alerts to add first
+
+- sudden spike in handshake failures
+- sudden spike in invalid signature errors
+- high websocket disconnect rate
+- control API token endpoint failure rate
+- no data-plane metrics scrape for N minutes
+
+## Key rotation procedure
+
+1. Create new project key.
+2. Start minting tokens with new key.
+3. Revoke old key after grace window.
+4. Confirm old-key tokens fail and new-key tokens succeed.
+
+## Deploy checklist
+
+1. Run CI and integration smoke.
+2. Deploy control API and data plane.
+3. Verify health + metrics.
+4. Run synthetic join/send/patch check.
+5. Watch error dashboard for 15-30 minutes.
+
+## Incident triage quick steps
+
+1. Identify scope (all users / one project / one room type).
+2. Check control API token/key status.
+3. Check data-plane handshake and decode errors.
+4. Verify recent deploy or config changes.
+5. If needed: roll back to last known healthy release.
+

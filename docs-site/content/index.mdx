@@ -1,41 +1,50 @@
 ---
 title: NEXIS
-description: Multiplayer backend for game developers.
+description: Engine-agnostic multiplayer backend for realtime games.
 ---
 
 # NEXIS
 
-Nexis gives you a multiplayer backend you can plug into your game without coupling to a specific engine.
+Nexis is the multiplayer layer between your game clients and your gameplay logic.
 
-**Start docs:** [Open Getting Started](/getting-started/) or jump directly to [Quickstart](/getting-started/quickstart/).
+- Data plane (Rust): rooms, RPC, state sync, matchmaking, plugins, low-latency traffic.
+- Control plane (Bun/Elysia): projects, keys, token minting, operations.
 
-You use it for:
+Gameplay packets go client -> data plane directly.  
+Control plane is for management, not realtime traffic.
 
-- room lifecycle (`joinOrCreate`, leave, presence)
-- realtime messages (events + RPC)
-- state synchronization (snapshot + patch)
-- authentication and token verification
-- optional matchmaking and plugin-driven room logic
+## What You Can Build
 
-## Who This Documentation Is For
+- Coop games with shared state (`state.snapshot` + `state.patch`)
+- Session-based games with room matchmaking
+- Fast action loops with custom room messages (`room.send("player.move", ...)`)
+- Authoritative room logic in plugins (Rust or WASM)
 
-This documentation is focused on **using Nexis as a library/platform** in your game stack:
+## Read This In Order
 
-- game client developers using `@nexis/sdk-ts`
-- backend developers minting client tokens
-- gameplay developers implementing room logic/plugins
+1. [Quickstart](/getting-started/quickstart/)
+2. [Connect a Client](/getting-started/connect-client/)
+3. [Auth in Real Games](/getting-started/authentication/)
+4. [Room Basics](/getting-started/room-basics/)
+5. [Counter Room Tutorial](/tutorials/counter-room/)
+6. [Custom Room Plugin Tutorial](/tutorials/custom-room-plugin/)
 
-## Start Here
+## Core Concepts
 
-1. [Getting Started](/getting-started/)
-2. [Quickstart](/getting-started/quickstart/)
-3. [Counter Room Tutorial](/tutorials/counter-room/)
-4. [TypeScript SDK API](/api-reference/typescript-sdk/)
+- `Project`: top-level tenant
+- `Key`: signing credential attached to a project
+- `Token`: short-lived client credential
+- `Room Type`: gameplay behavior class (example: `counter_plugin_room`)
+- `Room`: concrete instance (example: `counter_plugin_room:default`)
+- `Message Type`: your custom gameplay action/event type (example: `player.move`)
 
-## Core Integration Model
+## SDK At A Glance
 
-- Your game backend handles your user auth and mints short-lived Nexis tokens.
-- Game clients connect directly to Nexis data plane over WebSocket.
-- State and events flow room-by-room.
+```ts
+const client = new NexisClient();
+await client.connect("ws://localhost:4000", { projectId, token });
 
-This keeps gameplay traffic low-latency and avoids routing live packets through admin/control services.
+const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
+room.onStateChange((state) => render(state));
+room.send("inc", { by: 1 });
+```

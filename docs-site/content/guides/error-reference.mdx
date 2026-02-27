@@ -1,0 +1,82 @@
+---
+title: Error Reference
+description: Common errors, root causes, and concrete fixes.
+---
+
+# Error Reference
+
+## `token verification failed: invalid signature`
+
+Cause:
+
+- token signed with wrong key/secret
+- stale/revoked key
+- project/key mismatch
+
+Fix:
+
+1. Mint token from correct project/key.
+2. Verify key is active (not revoked/rotated away).
+3. Ensure data plane has up-to-date key status integration.
+
+## `unknown project id '...'`
+
+Cause:
+
+- wrong `project_id` sent in handshake
+- project not created in control plane
+
+Fix:
+
+1. Use token-derived project id when possible.
+2. Ensure project exists and was copied correctly.
+
+## `decode failed: invalid type: newtype struct, expected a string`
+
+Cause:
+
+- malformed payload type field
+- payload shape mismatch for room/plugin call
+
+Fix:
+
+1. For `room.message`, send `p: { type: string, data: any }`.
+2. Confirm client codec and server codec negotiation are consistent.
+
+## `Unknown RPC rid: missing` (SDK)
+
+Cause:
+
+- response missing `rid`
+- non-RPC message accidentally routed into RPC resolver path
+
+Fix:
+
+1. Ensure only `rpc.response` with valid `rid` enters RPC resolver.
+2. Validate server response construction for every RPC path.
+
+## WebSocket handshake errors (`No "Connection: upgrade" header`, `Handshake not finished`)
+
+Cause:
+
+- HTTP request sent to WS endpoint
+- reverse proxy misconfigured for websocket upgrade
+- client connection race/abort
+
+Fix:
+
+1. Ensure client uses `ws://` / `wss://`.
+2. Configure proxy upgrade headers correctly.
+3. Check load balancer websocket support.
+
+## CORS errors on control API
+
+Cause:
+
+- missing `Access-Control-Allow-Origin` for dashboard/web app origin
+
+Fix:
+
+1. Configure allowed origins in control API CORS settings.
+2. Confirm browser is calling control API URL you expect.
+

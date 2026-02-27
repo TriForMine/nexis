@@ -1,14 +1,20 @@
 export default {
-  'state-sync': {
-    title: 'State Synchronization'
+  "compatibility-and-versioning": {
+    title: "Compatibility and Versioning",
   },
-  'rpc-and-events': {
-    title: 'RPC and Events'
+  "state-sync": {
+    title: "State Synchronization",
+  },
+  "rpc-and-events": {
+    title: "RPC and Events",
+  },
+  "error-reference": {
+    title: "Error Reference",
   },
   matchmaking: {
-    title: 'Matchmaking'
+    title: "Matchmaking",
   },
   plugins: {
-    title: 'Room Plugins'
-  }
-}
+    title: "Room Plugins",
+  },
+};

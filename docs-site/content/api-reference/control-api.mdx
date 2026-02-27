@@ -9,24 +9,30 @@ Base URL (local): `http://localhost:3000`
 
 Use the control API from your backend services, not directly from game clients.
 
-## Main Endpoints
+## Projects
 
 - `POST /projects`
 - `GET /projects`
+
+## Keys
+
 - `POST /projects/:id/keys`
 - `GET /projects/:id/keys`
 - `POST /projects/:id/keys/:keyId/revoke`
 - `POST /projects/:id/keys/:keyId/rotate`
+
+## Tokens
+
 - `POST /tokens`
+
+Use from your backend to issue short-lived client tokens.
+
+## Ops endpoints
+
 - `GET /metrics`
+- `GET /internal/key-status` (data-plane internal checks)
 
-## Internal Endpoint
-
-- `GET /internal/key-status`
-
-This endpoint is intended for data-plane internal validation (revocation/scope checks).
-
-## Token Claims
+## Token payload fields
 
 Nexis client tokens include:
 
@@ -37,3 +43,11 @@ Nexis client tokens include:
 - optional `aud`
 
 Keep token TTL short for gameplay sessions.
+
+## Example: mint token
+
+```bash
+curl -X POST http://localhost:3000/tokens \
+  -H "content-type: application/json" \
+  -d '{"project_id":"<project-id>","key_id":"<key-id>","ttl_seconds":900}'
+```

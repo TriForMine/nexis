@@ -1,0 +1,36 @@
+---
+title: Compatibility and Versioning
+description: Stability guarantees and upgrade expectations for 0.x releases.
+---
+
+# Compatibility and Versioning
+
+Nexis is currently in `0.x` (beta maturity).
+
+## Current release policy
+
+- `0.1.x`: patch fixes, no intentional major contract breaks.
+- `0.x` minor bumps may include breaking changes when needed.
+- Every breaking change must include migration notes in changelog/docs.
+
+## What is treated as stable in `0.1.x`
+
+- Basic envelope format (`v`, `t`, `rid`, `room`, `p`)
+- Handshake flow
+- Core SDK methods (`connect`, `joinOrCreate`, `sendRPC`, `room.send`, `onStateChange`)
+- Core room/state message behavior
+
+## What may evolve before `1.0`
+
+- non-core message types
+- experimental plugin host interfaces
+- observability metric names/tags
+- internal control-plane details
+
+## Upgrade strategy
+
+1. Read `CHANGELOG.md`.
+2. Check protocol/API docs for changed message payloads.
+3. Run integration tests with your room/plugin logic.
+4. Run smoke + load tests before production deploy.
+

@@ -5,7 +5,7 @@ description: Envelope, handshake, channels, RPC, and state sync format.
 
 # Protocol
 
-## Message Envelope
+## Envelope
 
 ```json
 {
@@ -25,7 +25,7 @@ description: Envelope, handshake, channels, RPC, and state sync format.
 
 ## Handshake
 
-Client sends JSON handshake first:
+Client first message is always JSON handshake:
 
 ```json
 {
@@ -37,7 +37,12 @@ Client sends JSON handshake first:
 }
 ```
 
-Server validates version, applies auth mode, negotiates codec, and responds `handshake.ok`.
+Server does:
+
+1. protocol version validation
+2. auth check (based on auth mode)
+3. codec negotiation (`msgpack` preferred if both support)
+4. `handshake.ok` response
 
 ## Channels
 
@@ -53,7 +58,7 @@ Logical channels over WebSocket:
 - `state.ack` client ack
 - `state.resync` client asks fresh snapshot
 
-Patch payload example:
+Patch payload:
 
 ```json
 {
@@ -65,17 +70,33 @@ Patch payload example:
 }
 ```
 
-## RPC and Room Calls
+## Room message payload contract
 
-Common calls:
+When sending custom room messages (`t = "room.message"`), payload shape is:
 
-- `room.join_or_create`
-- `room.leave`
-- `room.list`
-- `room.message`
-- `matchmaking.enqueue`
-- `matchmaking.dequeue`
+```json
+{
+  "type": "player.move",
+  "data": { "x": 10, "y": 4, "seq": 18 }
+}
+```
+
+Binary variant (`t = "room.message.bytes"`) uses:
+
+```json
+{
+  "type": "voice.chunk",
+  "data_b64": "..."
+}
+```
+
+## Common call types
+
+- room: `room.join_or_create`, `room.leave`, `room.list`, `room.message`
+- matchmaking: `matchmaking.enqueue`, `matchmaking.dequeue`
+- state: `state.snapshot`, `state.patch`, `state.ack`, `state.resync`
+- rpc: `rpc.request`, `rpc.response`
 
 Unknown `rid` is rejected by RPC tracker.
 
-For full canonical protocol spec, see source doc: `docs/PROTOCOL.md`.
+Full canonical protocol spec: `docs/PROTOCOL.md`.

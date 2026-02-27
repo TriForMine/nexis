@@ -1,25 +1,49 @@
 ---
 title: Connect a Client
-description: Establish a Nexis session from your game client.
+description: Establish a session, negotiate codec, and join your first room.
 ---
 
 # Connect a Client
 
+## Basic connection
+
 ```ts
-import { NexisClient } from '@nexis/sdk-ts'
+import { NexisClient } from "@nexis/sdk-ts";
 
-const client = new NexisClient()
+const client = new NexisClient();
 
-await client.connect('ws://localhost:4000', {
-  projectId: 'your-project-id',
-  token: 'your-client-token'
-})
+await client.connect("ws://localhost:4000", {
+  projectId: "your-project-id",
+  token: "your-client-token",
+});
 ```
 
-## Auth Modes
+## What happens during connect
 
-- `required`: token required
-- `optional`: token optional (great for local prototyping)
-- `disabled`: no token checks (dev only)
+1. Socket opens.
+2. Client sends JSON handshake (`v`, supported codecs, project, token).
+3. Server validates auth and picks codec (MessagePack preferred).
+4. Server replies `handshake.ok`.
+5. SDK switches to negotiated codec for subsequent packets.
 
-If the token includes `project_id`, your UI can derive project id directly from token claims and avoid user mismatch errors.
+## Join and send room messages
+
+```ts
+const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
+
+room.send("player.move", { x: 10, y: 4, seq: 12 });
+room.onMessage("match.start", (payload) => {
+  console.log(payload);
+});
+```
+
+## Connection options
+
+`connect(url, options)` supports:
+
+- `projectId`, `token`
+- codec preference order
+- reconnect policy (enabled by default)
+- optional auto-join matched room behavior
+
+See full signatures in [TypeScript SDK](/sdks/typescript/).

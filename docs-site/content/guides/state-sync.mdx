@@ -23,13 +23,22 @@ Nexis syncs room state through two message types:
 }
 ```
 
-## Client Responsibilities
+## Client responsibilities
 
 - apply patches in order (`seq`)
 - keep local state consistent
 - ack processed updates with `state.ack`
 - request `state.resync` if sequence gap or checksum mismatch
 
-## Initial State
+## Recommended client loop
+
+1. Receive `state.snapshot` on join.
+2. Store `(state, seq, checksum?)`.
+3. On each `state.patch`, verify `seq` ordering.
+4. Apply patch ops.
+5. Ack latest sequence.
+6. If mismatch is detected, request `state.resync`.
+
+## Initial state
 
 On successful room join, client receives `state.snapshot` so UI can render immediately.

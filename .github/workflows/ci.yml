@@ -6,7 +6,44 @@ on:
   pull_request:
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      sdk_ts: ${{ steps.filter.outputs.sdk_ts }}
+      control_api: ${{ steps.filter.outputs.control_api }}
+      docs_site: ${{ steps.filter.outputs.docs_site }}
+      compose: ${{ steps.filter.outputs.compose }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            rust:
+              - 'server/**'
+              - 'plugins/rust/**'
+              - 'examples/wasm-plugins/**'
+            sdk_ts:
+              - 'sdks/ts/**'
+            control_api:
+              - 'dashboard/control-api/**'
+            docs_site:
+              - 'docs-site/**'
+              - 'docs/**'
+              - 'README.md'
+            compose:
+              - 'infra/**'
+              - 'server/**'
+              - 'dashboard/**'
+              - 'examples/**'
+              - 'sdks/ts/**'
+              - 'plugins/**'
+              - '.github/workflows/ci.yml'
+
   rust:
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,6 +53,8 @@ jobs:
         run: cargo test
 
   sdk-ts:
+    needs: changes
+    if: needs.changes.outputs.sdk_ts == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +72,8 @@ jobs:
         run: bunx tsc -p tsconfig.json --noEmit
 
   control-api:
+    needs: changes
+    if: needs.changes.outputs.control_api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +91,8 @@ jobs:
         run: bun test
 
   compose-smoke:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,3 +113,22 @@ jobs:
       - name: Teardown
         if: always()
         run: docker compose -f infra/docker-compose.yml down -v
+
+  docs-site:
+    needs: changes
+    if: needs.changes.outputs.docs_site == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - name: Install
+        working-directory: docs-site
+        run: bun install --frozen-lockfile
+      - name: Build
+        working-directory: docs-site
+        run: bun run build

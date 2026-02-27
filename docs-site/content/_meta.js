@@ -1,21 +1,24 @@
 export default {
   index: {
-    title: 'Introduction',
-    type: 'page'
+    title: "Introduction",
+    type: "page",
   },
-  'getting-started': {
-    title: 'Getting Started'
+  "getting-started": {
+    title: "Getting Started",
   },
   tutorials: {
-    title: 'Tutorials'
+    title: "Tutorials",
   },
   guides: {
-    title: 'Guides'
+    title: "Guides",
   },
-  'api-reference': {
-    title: 'API Reference'
+  sdks: {
+    title: "SDKs",
+  },
+  "api-reference": {
+    title: "API Reference",
   },
   infrastructure: {
-    title: 'Infrastructure'
-  }
-}
+    title: "Infrastructure",
+  },
+};

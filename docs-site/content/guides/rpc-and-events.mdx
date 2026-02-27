@@ -8,30 +8,41 @@ description: Choosing between request/response and fire-and-forget.
 Use **RPC** for operations that need correlation and explicit success/failure.
 Use **events/messages** for gameplay broadcasts and fire-and-forget actions.
 
-## RPC Example
+## Use RPC when
+
+- you need success/failure response
+- you need request correlation (`rid`)
+- operation is not high-frequency
+
+## Use room messages when
+
+- action is high-frequency gameplay input
+- you do not need one response per action
+- logic is room-scoped
+
+## RPC example
 
 ```ts
-const response = await client.sendRPC('room.join_or_create', {
-  room_type: 'counter_plugin_room',
-  room: 'default'
-})
+const response = await client.sendRPC("room.join_or_create", {
+  room_type: "counter_plugin_room",
+  room: "default",
+});
 ```
 
-RPC uses `rid` under the hood.
-
-## Room Message Example
+## Room message example
 
 ```ts
-room.send('move', { x: 10, y: 4 })
+room.send("player.move", { x: 10, y: 4, seq: 18 });
 ```
 
-Use room message handlers for lightweight gameplay actions.
-
-## Reliable vs Unreliable
+## Reliable vs unreliable
 
 Nexis supports logical channel semantics over WebSocket:
 
-- reliable (default)
-- unreliable (drop-allowed under pressure)
+- reliable: authoritative actions, confirmations, inventory, game results
+- unreliable: transient updates like position/aim/input deltas
 
-Use unreliable for high-frequency transient data (e.g. positions), reliable for authoritative actions.
+Practical split:
+
+- `player.move` -> often unreliable
+- `attack.commit` or `purchase.confirm` -> reliable

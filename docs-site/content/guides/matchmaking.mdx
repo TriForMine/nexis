@@ -5,25 +5,26 @@ description: Queue players and react to match.found.
 
 # Matchmaking
 
+Use matchmaking when players should be grouped into a room automatically.
+
 ## Enqueue
 
 ```ts
-await client.enqueueMatchmaking('counter_plugin_room', 2)
+await client.enqueueMatchmaking("counter_plugin_room", 2);
 ```
 
 ## Dequeue
 
 ```ts
-await client.dequeueMatchmaking()
+await client.dequeueMatchmaking();
 ```
 
-## Handle Match Event
+## Handle `match.found`
 
 ```ts
 client.onMatchFound(async (match) => {
-  // match.room, match.room_type, match.participants
-  await client.joinOrCreate(match.room_type, { room: match.room })
-})
+  await client.joinOrCreate(match.roomType, { room: match.room });
+});
 ```
 
 Ticket TTL and disconnect cleanup are handled server-side.

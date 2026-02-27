@@ -1,48 +1,75 @@
 ---
 title: Quickstart
-description: From token to live state updates.
+description: Start stack, mint token, connect client, join room, send action.
 ---
 
 # Quickstart
 
-## 1. Start Nexis
+This is the shortest end-to-end path that proves your setup is correct.
+
+## 1. Start the stack
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-## 2. Mint a Client Token
+Local endpoints:
 
-Using dashboard (`http://localhost:5173`) or API:
+- control API: `http://localhost:3000`
+- dashboard: `http://localhost:5173`
+- data plane websocket: `ws://localhost:4000`
+
+## 2. Create project and key
+
+Use the dashboard UI at `http://localhost:5173`:
+
+1. Create Project
+2. Create API Key for that project
+
+Or use control API endpoints from your backend.
+
+## 3. Mint client token
+
+From dashboard (recommended for first run), or API:
 
 ```bash
 curl -X POST http://localhost:3000/tokens \
   -H "content-type: application/json" \
-  -d '{"project_id":"demo-project","key_id":"demo-key","ttl_seconds":3600}'
+  -d '{"project_id":"<project-id>","key_id":"<key-id>","ttl_seconds":3600}'
 ```
 
-## 3. Connect and Join
+## 4. Connect and join room
 
 ```ts
-const client = new NexisClient()
-await client.connect('ws://localhost:4000', {
-  projectId: 'demo-project',
+import { NexisClient } from "@nexis/sdk-ts";
+
+const client = new NexisClient();
+await client.connect("ws://localhost:4000", {
+  projectId: "<project-id>",
   token
-})
+});
 
-const room = await client.joinOrCreate('counter_plugin_room', { room: 'default' })
+const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
 ```
 
-## 4. Send Gameplay Action
+## 5. Read initial state and react to patches
 
 ```ts
-room.send('inc', {})
+room.onStateChange((state) => {
+  console.log("counter:", state.counter);
+});
 ```
 
-## 5. Render Live State
+## 6. Send gameplay action
 
 ```ts
-room.onStateChange((state) => renderCounter(state.counter ?? 0))
+room.send("inc", { by: 1 });
 ```
 
-That is the core gameplay loop you will reuse for most realtime features.
+Expected result:
+
+- room join succeeds
+- you receive `state.snapshot` first
+- each increment produces `state.patch`
+
+If this fails, check [Connect a Client](/getting-started/connect-client/) and [Auth in Real Games](/getting-started/authentication/).

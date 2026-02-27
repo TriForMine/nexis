@@ -5,29 +5,47 @@ description: Recommended token flow for production.
 
 # Auth in Real Games
 
-Players should never call admin/control endpoints directly.
+Players should never call admin/control endpoints directly from client apps.
 
 ## Recommended Flow
 
-1. Player authenticates against **your game backend**
-2. Your backend validates player identity/session
-3. Your backend mints a short-lived Nexis token via control API
-4. Client connects to Nexis data plane using this token
+1. Player authenticates against your game backend.
+2. Backend validates identity/session.
+3. Backend mints short-lived Nexis token using control API.
+4. Client connects to Nexis data plane with that token.
 
-## Why This Matters
+## Why this architecture is required
 
-- keeps admin credentials off client devices
-- allows your game backend to control access policy
-- lets you attach game-specific claims/audience/TTL policy
+- Keeps project secrets and key lifecycle off the client.
+- Lets you enforce your own access policy before gameplay connect.
+- Supports refresh/reissue and revocation strategies.
 
-## Token Claims
+## Token claims
 
-Typical fields:
+Nexis token payload includes:
 
 - `project_id`
 - `issued_at`
 - `expires_at`
-- optional `key_id`
-- optional `aud`
 
-Use short TTL for gameplay sessions and refresh on reconnect when needed.
+Optional fields (if you use them in your backend flow):
+
+- `key_id`
+- `aud`
+
+## Auth modes in Nexis runtime
+
+- `required`: token must be valid.
+- `optional`: token accepted when present; anonymous allowed.
+- `disabled`: skip auth checks entirely.
+
+Use `required` in production.  
+`optional` and `disabled` are mainly for local development and testing.
+
+## Backend mint example
+
+```bash
+curl -X POST http://localhost:3000/tokens \
+  -H "content-type: application/json" \
+  -d '{"project_id":"<project-id>","key_id":"<key-id>","ttl_seconds":900}'
+```

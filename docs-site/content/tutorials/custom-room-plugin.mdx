@@ -5,12 +5,63 @@ description: Add room logic without modifying the data-plane core.
 
 # Create a Custom Room Plugin
 
-Nexis supports two plugin paths:
+Nexis supports two plugin paths for room logic:
 
 - Rust room plugin registration at compile time
 - WASM room plugin loading at runtime
 
-## Runtime WASM Plugin (No Data-Plane Rebuild)
+This tutorial focuses on runtime WASM plugins (no data-plane rebuild).
+
+## 1. Implement plugin behavior
+
+Your plugin receives room message inputs with shape:
+
+```json
+{
+  "type": "player.move",
+  "data": { "x": 10, "y": 4, "seq": 18 }
+}
+```
+
+Minimal logic pattern:
+
+- match on `input.type`
+- read action payload from `input.data`
+- return `{ state, event }`
+
+Counter example (Rust):
+
+```rust
+fn on_message(&self, state: &Value, input: &Value) -> PluginOutput {
+    match input.get("type").and_then(Value::as_str) {
+        Some("inc") => {
+            let by = input
+                .get("data")
+                .and_then(Value::as_object)
+                .and_then(|o| o.get("by"))
+                .and_then(Value::as_i64)
+                .unwrap_or(1);
+            let current = state.get("counter").and_then(Value::as_i64).unwrap_or(0);
+            let next = current + by;
+            PluginOutput::state_with_event(
+                json!({ "counter": next }),
+                json!({ "type": "counter.updated", "data": { "counter": next } }),
+            )
+        }
+        _ => PluginOutput::state(state.clone()),
+    }
+}
+```
+
+## 2. Build plugin module
+
+Use the reference plugin project:
+
+- `examples/wasm-plugins/counter_rust_plugin`
+
+Build output should produce a `.wasm` artifact.
+
+## 3. Configure runtime loading
 
 Set env var:
 
@@ -20,7 +71,15 @@ NEXIS_WASM_ROOM_PLUGINS='{"duel_room":"/app/plugins/duel_room.wasm"}'
 
 A plugin room can then be joined with room type `duel_room`.
 
-## ABI Overview
+## 4. Connect client and send custom types
+
+```ts
+const room = await client.joinOrCreate("duel_room", { room: "arena-1" });
+room.send("player.move", { x: 12, y: 4, seq: 10 });
+room.send("shoot", { dir: 90, weapon: "smg" });
+```
+
+## ABI reference (for advanced/plugin runtime debugging)
 
 Required exports:
 
@@ -48,8 +107,4 @@ Hook return payload JSON:
 
 `state` and `event` are optional.
 
-## Reference Example
-
-- `examples/wasm-plugins/counter_rust_plugin`
-
-Detailed ABI and runtime behavior: [WASM Plugins](/plugins/wasm-plugins/).
+For full ABI details, see `docs/WASM_PLUGINS.md`.

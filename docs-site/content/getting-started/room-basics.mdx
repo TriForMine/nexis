@@ -1,43 +1,59 @@
 ---
 title: Room Basics
-description: Join room, subscribe state, send messages.
+description: Join/create, state subscriptions, room messages, and cleanup.
 ---
 
 # Room Basics
 
-## Join or Create
+## Join or create
 
 ```ts
-const room = await client.joinOrCreate('counter_plugin_room', { room: 'default' })
+const room = await client.joinOrCreate("counter_plugin_room", { room: "default" });
 ```
 
-## Subscribe to State
+`roomType` picks gameplay logic.  
+`room` (option) targets a specific room id suffix.
+
+## State lifecycle
 
 ```ts
 room.onStateChange((state) => {
-  // update your game UI
-  console.log(state)
-})
+  render(state);
+});
 ```
 
-## Send Room Messages
+Important behavior:
+
+- first callback call is from initial `state.snapshot`
+- subsequent calls are from applied `state.patch` ops
+
+## Send custom room messages
 
 ```ts
-room.send('inc', {})
+room.send("player.move", { x: 10, y: 4, seq: 18 });
+room.send("chat.send", { message: "hello" });
 ```
 
-You can also send raw bytes:
+Use this for gameplay actions that your room/plugin handles in `on_message`.
+
+## Send bytes for custom binary payloads
 
 ```ts
-room.sendBytes('custom-bytes', [1, 2, 3, 4])
+room.sendBytes("voice.chunk", [1, 2, 3, 4]);
 ```
 
-## Receive Typed Messages
+## Receive room events/messages
 
 ```ts
-room.onMessage('powerup', (payload) => {
-  console.log(payload)
-})
+room.onMessage("chat.message", (payload) => {
+  console.log(payload);
+});
 ```
 
-Room-level state and message channels are isolated per room id.
+## Leave behavior
+
+When a client leaves:
+
+- membership is removed from room
+- empty room may auto-dispose (depending on room lifecycle)
+- reconnect resume is possible within configured session TTL

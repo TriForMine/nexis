@@ -7,14 +7,16 @@ description: Client API for connect, rooms, state, RPC, and matchmaking.
 
 Package: `@nexis/sdk-ts`
 
-## Core Client
+## Create and connect client
 
 ```ts
-const client = new NexisClient()
-await client.connect(wsUrl, { projectId, token })
+import { NexisClient } from "@nexis/sdk-ts";
+
+const client = new NexisClient();
+await client.connect(wsUrl, { projectId, token });
 ```
 
-## Main APIs
+## `NexisClient` methods
 
 - `connect(url, { projectId?, token? })`
 - `joinOrCreate(roomType, options)`
@@ -25,7 +27,7 @@ await client.connect(wsUrl, { projectId, token })
 - `sendRPC(type, payload)`
 - `onEvent(type, cb)`
 
-## Room APIs
+## `NexisRoom` methods
 
 - `room.state`
 - `room.onStateChange(cb)`
@@ -35,7 +37,30 @@ await client.connect(wsUrl, { projectId, token })
 - `room.sendBytes(type, bytes)`
 - `room.onMessage(type, cb)`
 
-## SDK Tests
+## Custom message types
+
+You can send any room message type name:
+
+```ts
+room.send("player.move", { x: 12, y: 4, seq: 91 });
+room.send("weapon.fire", { weaponId: "smg", tick: 12345 });
+```
+
+In room/plugin logic, handle via `input.type` and `input.data`.
+
+## RPC usage
+
+```ts
+const res = await client.sendRPC("room.join_or_create", {
+  room_type: "counter_plugin_room",
+  room: "default",
+});
+```
+
+RPC is for request/response workflows.  
+`room.send` is for gameplay action/event streams.
+
+## Quality checks
 
 - patch apply
 - codec encode/decode (json + msgpack)
@@ -49,3 +74,4 @@ cd sdks/ts
 bun test
 bunx tsc -p tsconfig.json --noEmit
 ```
+

@@ -10,9 +10,9 @@ Gameplay traffic goes directly to the data plane (`ws://...`) and never through 
 
 ## Status
 
-MVP / Beta.
+`v0.1.0` release-ready MVP / Beta.
 
-Current stack is production-minded but intentionally minimal.
+Current stack is production-minded and intentionally minimal.
 
 ## Core Capabilities (V1)
 
@@ -137,7 +137,13 @@ k6 run infra/load/k6-ws.js
 - WASM Plugins: [docs/WASM_PLUGINS.md](docs/WASM_PLUGINS.md)
 - GitHub Pages docs: `https://triformine.github.io/nexis/`
 
+## Release + Project Policies
+
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+- Releasing process: [RELEASING.md](RELEASING.md)
+- Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security policy: [SECURITY.md](SECURITY.md)
+
 ## License
 
 Apache-2.0.
-

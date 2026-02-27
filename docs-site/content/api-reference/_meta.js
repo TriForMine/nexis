@@ -5,10 +5,10 @@ export default {
   protocol: {
     title: "Protocol",
   },
+  "message-catalog": {
+    title: "Message Catalog",
+  },
   "control-api": {
     title: "Control API",
-  },
-  "typescript-sdk": {
-    title: "TypeScript SDK",
   },
 };
