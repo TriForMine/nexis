@@ -1,0 +1,35 @@
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  control-api:
+    build:
+      context: .
+      dockerfile: dashboard/control-api/Dockerfile
+    environment:
+      NEXIS_MASTER_SECRET: nexis-dev-master-secret
+      NEXIS_INTERNAL_TOKEN: nexis-dev-internal-token
+
+  rust-server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      NEXIS_MASTER_SECRET: nexis-dev-master-secret
+      NEXIS_INTERNAL_TOKEN: nexis-dev-internal-token
+      NEXIS_WASM_ROOM_PLUGINS: '{"counter_plugin_room":"/app/plugins/nexis_counter_plugin.wasm"}'
+
+  dashboard-ui:
+    build:
+      context: .
+      dockerfile: dashboard/ui/Dockerfile
+    ports:
+      - "5173:5173"
+
+  web-demo:
+    build:
+      context: .
+      dockerfile: examples/web-demo/Dockerfile
+    ports:
+      - "8080:8080"

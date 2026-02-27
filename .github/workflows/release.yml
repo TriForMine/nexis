@@ -387,3 +387,122 @@ jobs:
       - name: Publish SDK to npm
         working-directory: sdks/ts
         run: npm publish --access public --provenance --tag ${{ steps.npm_tag.outputs.tag }}
+
+  build-rust-server-binary:
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux-x86_64
+            ext: ""
+            archive_ext: tar.gz
+          - os: macos-latest
+            label: macos-x86_64
+            ext: ""
+            archive_ext: tar.gz
+          - os: windows-latest
+            label: windows-x86_64
+            ext: ".exe"
+            archive_ext: zip
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.89.0
+      - name: Build rust-server
+        working-directory: server
+        run: cargo build --release -p transport_ws
+      - name: Package rust-server (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp "server/target/release/transport_ws${{ matrix.ext }}" dist/nexis-rust-server${{ matrix.ext }}
+          tar -czf "nexis-rust-server-${{ matrix.label }}.${{ matrix.archive_ext }}" -C dist .
+      - name: Package rust-server (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item "server/target/release/transport_ws${{ matrix.ext }}" "dist/nexis-rust-server${{ matrix.ext }}"
+          Compress-Archive -Path "dist/*" -DestinationPath "nexis-rust-server-${{ matrix.label }}.${{ matrix.archive_ext }}" -Force
+      - name: Upload rust-server artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-server-${{ matrix.label }}
+          path: nexis-rust-server-${{ matrix.label }}.${{ matrix.archive_ext }}
+          if-no-files-found: error
+
+  build-control-api-binary:
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux-x86_64
+            ext: ""
+            archive_ext: tar.gz
+          - os: macos-latest
+            label: macos-x86_64
+            ext: ""
+            archive_ext: tar.gz
+          - os: windows-latest
+            label: windows-x86_64
+            ext: ".exe"
+            archive_ext: zip
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install control-api deps
+        working-directory: dashboard/control-api
+        run: bun install --frozen-lockfile
+      - name: Build control-api binary
+        working-directory: dashboard/control-api
+        run: bun build src/index.ts --compile --outfile control-api${{ matrix.ext }}
+      - name: Package control-api (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp "dashboard/control-api/control-api${{ matrix.ext }}" dist/nexis-control-api${{ matrix.ext }}
+          tar -czf "nexis-control-api-${{ matrix.label }}.${{ matrix.archive_ext }}" -C dist .
+      - name: Package control-api (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item "dashboard/control-api/control-api${{ matrix.ext }}" "dist/nexis-control-api${{ matrix.ext }}"
+          Compress-Archive -Path "dist/*" -DestinationPath "nexis-control-api-${{ matrix.label }}.${{ matrix.archive_ext }}" -Force
+      - name: Upload control-api artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: control-api-${{ matrix.label }}
+          path: nexis-control-api-${{ matrix.label }}.${{ matrix.archive_ext }}
+          if-no-files-found: error
+
+  publish-release-assets:
+    needs: [build-rust-server-binary, build-control-api-binary]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release-artifacts/*

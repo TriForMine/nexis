@@ -1,6 +1,6 @@
 {
   "name": "@triformine/nexis-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "author": "TriForMine <quentin@triformine.dev> (https://github.com/TriForMine/)",
   "license": "Apache-2.0",

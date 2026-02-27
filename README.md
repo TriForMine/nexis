@@ -46,11 +46,20 @@ nexis/
 
 ## Quick Start
 
-From repo root:
+From repo root (dev local build):
 
 ```bash
-docker compose -f infra/docker-compose.yml up --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
+
+Or deploy with prebuilt GHCR images (no local build):
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+Set `NEXIS_IMAGE_TAG=next` in `.env` for preview builds.
 
 Services:
 

@@ -1,0 +1,120 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nexis
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nexis"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  control-api:
+    image: ghcr.io/triformine/control-api:${NEXIS_IMAGE_TAG:-latest}
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/nexis
+      NEXIS_MASTER_SECRET: ${NEXIS_MASTER_SECRET:-change-me}
+      NEXIS_INTERNAL_TOKEN: ${NEXIS_INTERNAL_TOKEN:-change-me}
+      NEXIS_DEMO_PROJECT_ID: demo-project
+      NEXIS_DEMO_KEY_ID: demo-key
+      NEXIS_DEMO_PROJECT_SECRET: demo-secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:3000/health'); if(!r.ok) process.exit(1);",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "3000:3000"
+
+  rust-server:
+    image: ghcr.io/triformine/rust-server:${NEXIS_IMAGE_TAG:-latest}
+    environment:
+      NEXIS_BIND: 0.0.0.0:4000
+      NEXIS_MASTER_SECRET: ${NEXIS_MASTER_SECRET:-change-me}
+      NEXIS_CONTROL_API_URL: http://control-api:3000
+      NEXIS_INTERNAL_TOKEN: ${NEXIS_INTERNAL_TOKEN:-change-me}
+      NEXIS_AUTH_MODE: ${NEXIS_AUTH_MODE:-required}
+      NEXIS_SESSION_TTL_SECONDS: ${NEXIS_SESSION_TTL_SECONDS:-30}
+      NEXIS_ROOM_TICK_MS: 100
+      NEXIS_STATE_SNAPSHOT_EVERY_PATCHES: 20
+      NEXIS_STATE_PATCH_CHECKSUM_EVERY_PATCHES: 10
+      NEXIS_METRICS_BIND: 0.0.0.0:9100
+      NEXIS_DEMO_PROJECT_ID: demo-project
+      NEXIS_DEMO_PROJECT_SECRET: demo-secret
+      NEXIS_ROOM_TYPE_PLUGINS: ${NEXIS_ROOM_TYPE_PLUGINS:-}
+      NEXIS_WASM_ROOM_PLUGINS: ${NEXIS_WASM_ROOM_PLUGINS:-}
+    depends_on:
+      control-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 4000"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "4000:4000"
+      - "9100:9100"
+
+  dashboard-ui:
+    image: ghcr.io/triformine/dashboard-ui:${NEXIS_IMAGE_TAG:-latest}
+    environment:
+      PORT: 5173
+      CONTROL_API_URL: http://control-api:3000
+    depends_on:
+      control-api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:5173/'); if(!r.ok) process.exit(1);",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5173:5173"
+
+  web-demo:
+    image: ghcr.io/triformine/web-demo:${NEXIS_IMAGE_TAG:-latest}
+    environment:
+      PORT: 8080
+    depends_on:
+      rust-server:
+        condition: service_healthy
+      control-api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const r=await fetch('http://127.0.0.1:8080/'); if(!r.ok) process.exit(1);",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres-data:
