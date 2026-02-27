@@ -115,31 +115,13 @@ jobs:
         working-directory: dashboard/control-api
         run: bunx tsc --noEmit
 
-  publish-images:
+  publish-image-rust-server:
     needs: [changes, validate]
+    if: (github.event_name == 'push' || inputs.publish_images == true) && needs.changes.outputs.image_rust_server == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        include:
-          - service: rust-server
-            dockerfile: server/Dockerfile
-          - service: control-api
-            dockerfile: dashboard/control-api/Dockerfile
-          - service: dashboard-ui
-            dockerfile: dashboard/ui/Dockerfile
-          - service: web-demo
-            dockerfile: examples/web-demo/Dockerfile
-    if: |
-      (github.event_name == 'push' || inputs.publish_images == true) &&
-      (
-        (matrix.service == 'rust-server' && needs.changes.outputs.image_rust_server == 'true') ||
-        (matrix.service == 'control-api' && needs.changes.outputs.image_control_api == 'true') ||
-        (matrix.service == 'dashboard-ui' && needs.changes.outputs.image_dashboard_ui == 'true') ||
-        (matrix.service == 'web-demo' && needs.changes.outputs.image_web_demo == 'true')
-      )
     steps:
       - uses: actions/checkout@v4
       - name: Determine release channel
@@ -173,7 +155,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_NAMESPACE }}/${{ matrix.service }}
+          images: ${{ env.IMAGE_NAMESPACE }}/rust-server
           tags: |
             type=raw,value=${{ steps.tags.outputs.primary }}
             type=raw,value=${{ steps.tags.outputs.secondary }}
@@ -181,7 +163,172 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: server/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-image-control-api:
+    needs: [changes, validate]
+    if: (github.event_name == 'push' || inputs.publish_images == true) && needs.changes.outputs.image_control_api == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine release channel
+        id: channel
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=next" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Compute image tags
+        id: tags
+        run: |
+          if [[ "${{ steps.channel.outputs.channel }}" == "stable" ]]; then
+            echo "primary=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "secondary=latest" >> "$GITHUB_OUTPUT"
+          else
+            short_sha="${GITHUB_SHA::7}"
+            echo "primary=next" >> "$GITHUB_OUTPUT"
+            echo "secondary=sha-${short_sha}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAMESPACE }}/control-api
+          tags: |
+            type=raw,value=${{ steps.tags.outputs.primary }}
+            type=raw,value=${{ steps.tags.outputs.secondary }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dashboard/control-api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-image-dashboard-ui:
+    needs: [changes, validate]
+    if: (github.event_name == 'push' || inputs.publish_images == true) && needs.changes.outputs.image_dashboard_ui == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine release channel
+        id: channel
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=next" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Compute image tags
+        id: tags
+        run: |
+          if [[ "${{ steps.channel.outputs.channel }}" == "stable" ]]; then
+            echo "primary=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "secondary=latest" >> "$GITHUB_OUTPUT"
+          else
+            short_sha="${GITHUB_SHA::7}"
+            echo "primary=next" >> "$GITHUB_OUTPUT"
+            echo "secondary=sha-${short_sha}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAMESPACE }}/dashboard-ui
+          tags: |
+            type=raw,value=${{ steps.tags.outputs.primary }}
+            type=raw,value=${{ steps.tags.outputs.secondary }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dashboard/ui/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-image-web-demo:
+    needs: [changes, validate]
+    if: (github.event_name == 'push' || inputs.publish_images == true) && needs.changes.outputs.image_web_demo == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine release channel
+        id: channel
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=next" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Compute image tags
+        id: tags
+        run: |
+          if [[ "${{ steps.channel.outputs.channel }}" == "stable" ]]; then
+            echo "primary=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "secondary=latest" >> "$GITHUB_OUTPUT"
+          else
+            short_sha="${GITHUB_SHA::7}"
+            echo "primary=next" >> "$GITHUB_OUTPUT"
+            echo "secondary=sha-${short_sha}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAMESPACE }}/web-demo
+          tags: |
+            type=raw,value=${{ steps.tags.outputs.primary }}
+            type=raw,value=${{ steps.tags.outputs.secondary }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: examples/web-demo/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
