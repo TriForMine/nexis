@@ -136,7 +136,7 @@ async function ensureDashboardOperatorAccount(
   const minLength = context.password.config.minPasswordLength;
   if (adminPassword.length < minLength) {
     console.warn(
-      `[nexis] WARNING: NEXIS_DASHBOARD_ADMIN_PASSWORD is shorter than minimum (${minLength}). Skipping admin bootstrap.`,
+      "[nexis] WARNING: NEXIS_DASHBOARD_ADMIN_PASSWORD does not meet the required password policy. Skipping admin bootstrap.",
     );
     return;
   }
